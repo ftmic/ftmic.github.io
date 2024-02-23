@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MIC Map Beta</title>
+  <link rel="stylesheet" href="style.css">
+  <style>html {
+    height: 100%;
+    width: 100%;
+  }
+    h2{
+        font-family: monospace;
+        font-size: 30px;
+      }
+  a{
+    color:inherit;
+  }
+  h1{
+        font-family: monospace;
+      }
+  p{
+        font-family: monospace;
+      }
+      body{
+        background-color:#e1cf94
+      }
+  .h3{
+        font-family: monospace; font-size: 30px;
+      }
+        #hy{
+          background-color:#f3f2ed;
+           border:solid #683722;
+          margin:0px;
+          margin-left:4px;
+          padding:10px;
+          font-size:16px;
+           font-family: monospace;
+        }</style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+  <div id="hy">
+    <h2>Map of Military Industrial Complex Locations</h2></div>
+  <div id="hy" style="padding: 10px; background-color: white; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width:200px bottom: 20px; left: 20px; z-index: 1000;">
+      <h3>Map Legend</h3>
+      <div  style="margin-bottom: 10px;">
+          <img src="https://toppng.com/uploads/preview/skyrim-map-icons-clip-library-skyrim-quest-marker-icon-11553438138ukhmthly3x.png" alt="Icon" style="height: 20px; vertical-align: middle;"> <span>Facility makes weapon used by Israel</span>
+      </div>
+      <div>
+          <div style="text-align: left; color: black; font-size: 18px; text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/0/0e/Basic_red_dot.png" alt="Icon" height="8px" style="z-index: 1; vertical-align: middle;">
+              <span>General weapons facility (Lockheed, Northrop etc)</span>
+          </div>
+      </div>
+  </div>
+<body>
+  <div id="map" style="width: 95vw; height: 50vw;   margin: 10px;
+  position: relative;
+  ></div>
+    /* <div id="side-pane" style="width: 25%; height: 100vh; float: right; display: none; position: relative; z-index: 400; background: #fff;"> */ 
+    </div>
+ <script src="./script.js"></script>
+    <script>function one(a){
+        return 'http://maps.apple.com/?address='+a.replace(/\s/g, "+")+"&t=m";
+      }
+      var a = L.map('map').setView([38.7214708, -98.960214], 3.9);
+      var b = [];
+      var c = 0;
+      var d = ["./consol.json"];
+
+      async function two(e) {
+        try {
+          const f = await fetch(e);  
+          if (!f.ok) {
+            throw new Error('network response fail');
+          }
+          const g = await f.json();
+          g.forEach(h => { b.push(h) });
+        } catch (i) {
+          console.error('fetch issue:', i);
+        }
+      }
+
+      async function three(){
+      await two(d[0]);
+      // Assuming there might be more than one database (dbs) file you're loading:
+      d.slice(1).forEach(async (db) => await two(db));
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+          maxZoom: 18
+        }).addTo(a);
+
+        b.forEach(function(j) {
+          var k = j['CONTRACTOR NAME'].substring(0, j["CONTRACTOR NAME"].indexOf(' ')) == "The" ? j['CONTRACTOR NAME'].split(" ")[1] :
+            j['CONTRACTOR NAME'].substring(0, j["CONTRACTOR NAME"].indexOf(' ')) == "General" ? "General " + j['CONTRACTOR NAME'].split(" ")[1] :
+            j['CONTRACTOR NAME'].substring(0, j["CONTRACTOR NAME"].indexOf(' '));
+
+          var l = j["Used by Israel"] ? L.divIcon({
+                  className: 'custom-icon',
+                  html: '<div style="text-align: center;color:black;font-size:22px; text-shadow:-1px -1px 0 white,    1px -1px 0 white,    -1px 1px 0 white,    1px 1px 0 white; "><img z-index=100000 height="35px" src="https://toppng.com/uploads/preview/skyrim-map-icons-clip-library-skyrim-quest-marker-icon-11553438138ukhmthly3x.png" alt="Icon"><br><span>' + k +'</span></div>',
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 16], 
+                  popupAnchor: [0, -16] 
+              }) : L.divIcon({
+                  className: 'custom-icon',
+                  html: '<div style="text-align: center;color:black;font-size:22px; text-shadow:-1px -1px 0 white,    1px -1px 0 white,    -1px 1px 0 white,    1px 1px 0 white; "><img height="7px" z-index=1 src="https://upload.wikimedia.org/wikipedia/commons/0/0e/Basic_red_dot.png" alt="Icon"><br><span></span></div>',
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 16], 
+                  popupAnchor: [0, -16] 
+              });
+
+          var m = `<h3>${j['CONTRACTOR NAME']}</h3>` +
+            `<a href="${j['Location Link']}">${j.ADDRESS}</a><br>` +
+            `${j['Products Manufactured'] ? `Products Manufactured: ${j['Products Manufactured']}<br>` : ''}` +
+            `${j.Source ? j.Source.split(', ').map((source, index) => `Source ${index + 1}: <a href="${source}">Link</a>`).join('<br>') + '<br>' : ''}` +
+            `${j['Products Developed'] ? `Products Developed: ${j['Products Developed']}<br>` : ''}` +
+            `${j.Notes ? `Notes: ${j.Notes}<br>` : ''}`;
+          var n = L.popup().setContent(m);  
+          var o = L.marker([j.latitude, j.longitude], { icon: l }).addTo(a);
+          o.bindPopup(n);
+        });
+      }
+three();</script>
+</body>
